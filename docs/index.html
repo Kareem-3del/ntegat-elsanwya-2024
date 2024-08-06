@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بحث الطلاب</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: "Cairo", sans-serif;
+      font-optical-sizing: auto;
+    }
+  </style>
+</head>
+<body dir="rtl" class="bg-blue-100 flex items-center justify-center min-h-screen">
+  <div class="container mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <h1 class="text-3xl font-bold mb-6 text-center">نتيجة الثانوية 2024</h1>
+    <form id="search-form" class="mb-6">
+      <div class="mb-4">
+        <label for="search-type" class="block text-sm font-medium text-gray-700">اختر طريقة البحث:</label>
+        <select id="search-type" name="search-type" class="block w-full mt-1 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="name">الاسم</option>
+          <option value="seat_num">رقم الجلوس</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label for="search-method" class="block text-sm font-medium text-gray-700">اختر طريقة البحث:</label>
+        <select id="search-method" name="search-method" class="block w-full mt-1 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="includes">تضمين</option>
+          <option value="startsWith">يبدأ بـ</option>
+        </select>
+      </div>
+      <div class="flex justify-center items-center mb-4 max-w-xl mx-auto gap-3">
+        <input type="text" id="search-value" name="search-value" placeholder="أدخل النص" class="border p-2 mr-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="submit" class="text-white p-2 rounded hover:bg-blue-600 transition duration-300 flex-none">
+          <img src="https://img.icons8.com/?size=100&id=44045&format=png&color=000000" alt="search" width="30">
+        </button>
+      </div>
+    </form>
+    <div id="results" class="bg-gray-50 p-4 rounded shadow-inner mb-4"></div>
+    <div id="pagination" class="flex justify-center items-center container overflow-x-scroll"></div>
+  </div>
+
+  <script>
+    const apiURL = "http://test.precertificationn.com"; // Replace with your API URL
+
+    async function fetchResults(page = 1) {
+      const searchType = document.getElementById('search-type').value;
+      const searchMethod = document.getElementById('search-method').value;
+      const searchValue = document.getElementById('search-value').value;
+      const response = await fetch(`${apiURL}/search?${searchType}=${searchValue}&method=${searchMethod}&page=${page}`);
+      const data = await response.json();
+      
+      // Display results
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = data.results.length > 0 ? data.results.map(student => `
+        <div class="border-b py-2 mb-2">
+          <p><strong>رقم الجلوس:</strong> ${student["﻿seat_num"]}</p>
+          <p><strong>الاسم:</strong> ${student.name}</p>
+          <p><strong>الدرجة:</strong> ${student.grade}</p>
+          <p><strong>النسبة:</strong> ${student.c_flage === "1" ? Math.round((student.grade / 410) * 100) : Math.round((student.grade / 670) * 100)}%</p>
+        </div>
+      `).join('') : '<p class="text-center text-gray-500">لا توجد نتائج.</p>';
+
+      // Display pagination
+      const paginationDiv = document.getElementById('pagination');
+      paginationDiv.innerHTML = '';
+      const totalPages = data.totalPages;
+      const currentPage = data.currentPage;
+      let paginationHtml = '';
+
+      for (let i = 1; i <= totalPages; i++) {
+        paginationHtml += `
+          <button onclick="fetchResults(${i})" class="mx-1 px-3 py-1 rounded ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'} hover:bg-blue-100 transition duration-300">${i}</button>
+        `;
+      }
+
+      paginationDiv.innerHTML = paginationHtml;
+    }
+
+    document.getElementById('search-form').addEventListener('submit', event => {
+      event.preventDefault();
+      fetchResults();
+    });
+
+    // Fetch initial results
+    // fetchResults();
+  </script>
+</body>
+</html>
